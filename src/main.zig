@@ -65,7 +65,6 @@ fn parseArgs(allocator: std.mem.Allocator) !ParseArgsResult {
     const ArgId = enum {
         help,
         version,
-        @"minimum-build-version",
         @"compiler-version",
         @"enable-debug-log",
         @"enable-message-tracing",
@@ -84,7 +83,6 @@ fn parseArgs(allocator: std.mem.Allocator) !ParseArgsResult {
         var cmd_infos: InfoMap = InfoMap.init(.{
             .help = "Prints this message.",
             .version = "Prints the version.",
-            .@"minimum-build-version" = "Prints the minimum build version specified in build.zig.",
             .@"compiler-version" = "Prints the compiler version with which the server was compiled.",
             .@"enable-debug-log" = "Enables debug logs.",
             .@"enable-message-tracing" = "Enables message tracing.",
@@ -134,7 +132,6 @@ fn parseArgs(allocator: std.mem.Allocator) !ParseArgsResult {
         switch (id) {
             .help,
             .version,
-            .@"minimum-build-version",
             .@"compiler-version",
             .@"enable-debug-log",
             .@"enable-message-tracing",
@@ -156,10 +153,6 @@ fn parseArgs(allocator: std.mem.Allocator) !ParseArgsResult {
     }
     if (specified.get(.version)) {
         try stdout.writeAll(zls.build_options.version_string ++ "\n");
-        return result;
-    }
-    if (specified.get(.@"minimum-build-version")) {
-        try stdout.writeAll(zls.build_options.min_zig_string ++ "\n");
         return result;
     }
     if (specified.get(.@"compiler-version")) {

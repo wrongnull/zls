@@ -1,3 +1,9 @@
+//! PLEASE READ THE FOLLOWING MESSAGE BEFORE EDITING THIS FILE:
+//! Update the `minimum_master_version_string` field `BuildRunnerVersion.zig` if necessary.
+//!
+//! You can test out the build runner on ZLS's `build.zig` with the following command:
+//! zig build --build-runner src/build_runner/master.zig
+
 const root = @import("@build");
 const std = @import("std");
 const log = std.log;

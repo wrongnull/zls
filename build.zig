@@ -5,9 +5,11 @@ const zls_version = std.SemanticVersion{ .major = 0, .minor = 12, .patch = 0 };
 /// set this to true when tagging a new ZLS release and then unset it on the next development cycle.
 const zls_version_is_tagged: bool = false;
 
-/// document the latest breaking change that caused a change to the string below:
+/// Must match the `minimum_zig_version` in `build.zig.zon`.
+///
+/// Specify the minimum Zig version that required to compile ZLS:
 /// compiler: implement analysis-local comptime-mutable memory
-const min_zig_string = "0.12.0-dev.3451+405502286";
+const minimum_zig_version = "0.12.0-dev.3451+405502286";
 
 pub fn build(b: *Build) !void {
     const target = b.standardTargetOptions(.{});
@@ -32,7 +34,6 @@ pub fn build(b: *Build) !void {
     build_options.addOption([]const u8, "version_string", version_result.version_string);
     build_options.addOption(std.SemanticVersion, "version", try std.SemanticVersion.parse(version_result.version_string));
     build_options.addOption(?[]const u8, "precise_version_string", version_result.precise_version_string);
-    build_options.addOption([]const u8, "min_zig_string", min_zig_string);
 
     const exe_options = b.addOptions();
     const exe_options_module = exe_options.createModule();
@@ -394,7 +395,7 @@ fn getTracyModule(
 }
 
 const Build = blk: {
-    const min_zig = std.SemanticVersion.parse(min_zig_string) catch unreachable;
+    const min_zig = std.SemanticVersion.parse(minimum_zig_version) catch unreachable;
 
     // check that the ZLS version and minimum build version make sense
     if (zls_version_is_tagged) {
@@ -404,7 +405,7 @@ const Build = blk: {
                 \\          ZLS version: {[current_version]}
                 \\  minimum Zig version: {[minimum_version]}
                 \\
-                \\This is a developer error. Set `min_zig_string` to {[current_version]}.
+                \\This is a developer error. Set `minimum_zig_version` to {[current_version]}.
             , .{ .current_version = zls_version, .minimum_version = min_zig });
             @compileError(message);
         }

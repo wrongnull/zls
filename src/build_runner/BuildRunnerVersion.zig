@@ -8,6 +8,10 @@ pub const BuildRunnerVersion = enum {
     @"0.11.0",
     @"0.10.0",
 
+    /// Specify the minimum Zig version that required to compile the `master.zig` build runner. 
+    pub const minimum_master_version_string: []const u8 = "0.12.0-dev.3451+405502286";
+    pub const minimum_master_version: std.SemanticVersion = std.SemanticVersion.parse("0.12.0-dev.3451+405502286") catch unreachable;
+
     pub fn selectBuildRunnerVersion(runtime_zig_version: std.SemanticVersion) ?BuildRunnerVersion {
         const runtime_zig_version_simple = std.SemanticVersion{
             .major = runtime_zig_version.major,
