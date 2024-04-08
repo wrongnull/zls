@@ -23,46 +23,22 @@ jobs:
         with:
           version: master
 
+      - name: Install 7zip
+        run: |
+          sudo apt-get update
+          sudo apt-get install 7zip
+
       - run: zig env
 
       - name: Build artifacts
         run: |
-          mkdir -p artifacts/master
+          zig build release -Doptimize=ReleaseSafe -Drelease-compress --summary all
 
-          zig build release -Dcpu=baseline -Doptimize=ReleaseSafe --prefix artifacts/master --summary all
-
-          zls_version=$(artifacts/master/x86_64-linux/zls --version)
-          mkdir -p "artifacts/$zls_version/"
-          cp -r artifacts/master/* "artifacts/$zls_version/"
-
-          wget https://zigtools-releases.nyc3.digitaloceanspaces.com/zls/index.json
-
-          cp index.json artifacts/old-index.json
-
-          for file in artifacts/master/*; do
-            targets+=("${file#artifacts/master/}")
-          done
-
-          jq \
-          --arg targets                   "${targets[*]}"                                       \
-          --arg zig_version               "$(zig version)"                                      \
-          --arg zls_version               "$(artifacts/master/x86_64-linux/zls --version)"               \
-          --arg zls_minimum_build_version "$(artifacts/master/x86_64-linux/zls --minimum-build-version)" \
-          '.latest = $zls_version | .versions[$zls_version] = {
-          "date": now | todateiso8601,
-          "builtWithZigVersion": $zig_version,
-          "zlsVersion": $zls_version,
-          "zlsMinimumBuildVersion": $zls_minimum_build_version,
-          "commit": "${{ github.sha }}",
-          "targets": ($targets / " "),
-          }' index.json > artifacts/index.json
-
-      - uses: BetaHuhn/do-spaces-action@v2
-        if: github.ref == 'refs/heads/master' # don't deploy when dispatching workflow on non-master branch
+      - uses: ryand56/r2-upload-action@latest
         with:
-          access_key: ${{ secrets.DO_SPACES_ACCESS_KEY }}
-          secret_key: ${{ secrets.DO_SPACES_SECRET_KEY }}
-          space_name: zigtools-releases
-          space_region: nyc3
-          source: artifacts/
-          out_dir: zls/
+          r2-account-id: ${{ secrets.R2_ACCOUNT_ID }}
+          r2-access-key-id: ${{ secrets.R2_ACCESS_KEY_ID }}
+          r2-secret-access-key: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          r2-bucket: ${{ secrets.R2_BUCKET }}
+          source-dir: zig-out/artifacts
+          destination-dir: builds
