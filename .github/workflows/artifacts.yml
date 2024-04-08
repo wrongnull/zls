@@ -32,7 +32,7 @@ jobs:
 
       - name: Build artifacts
         run: |
-          zig build release -Doptimize=ReleaseSafe -Drelease-compress --summary all
+          zig build release -Drelease-compress --summary all
 
       - uses: ryand56/r2-upload-action@latest
         with:
