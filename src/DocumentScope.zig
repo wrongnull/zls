@@ -54,7 +54,7 @@ pub const DeclarationLookupMap = std.ArrayHashMapUnmanaged(
 );
 
 pub const DeclarationLookup = struct {
-    pub const Kind = enum { field, other };
+    pub const Kind = enum { field, other, label };
     scope: Scope.Index,
     name: []const u8,
     kind: Kind,
@@ -471,7 +471,6 @@ fn walkNode(
 
         .test_decl,
         .@"defer",
-        .@"break",
         .anyframe_type,
         => walkRhsNode(context, tree, node_idx),
 
@@ -584,6 +583,7 @@ fn walkNode(
         .asm_input,
         => unreachable,
 
+        .@"break",
         .@"continue",
         .anyframe_literal,
         .char_literal,
@@ -826,7 +826,7 @@ fn walkBlockNodeKeepOpen(
         try scope.pushDeclaration(
             offsets.identifierTokenToNameSlice(tree, first_token),
             .{ .label = .{ .identifier = first_token, .block = node_idx } },
-            .other,
+            .label,
         );
     }
 
@@ -856,6 +856,18 @@ fn walkBlockNodeKeepOpen(
                         name,
                         .{ .assign_destructure = .{ .node = idx, .index = @intCast(i) } },
                         .other,
+                    );
+                }
+            },
+            .@"break" => {
+                if (data[node_idx].lhs == 0) continue;
+                const br_first_token = tree.firstToken(idx);
+                if (token_tags[br_first_token + 1] == .colon and token_tags[br_first_token + 2] == .identifier) {
+                    const label_identifier_token = br_first_token + 2;
+                    try scope.pushDeclaration(
+                        offsets.identifierTokenToNameSlice(tree, label_identifier_token),
+                        .{ .label = .{ .identifier = label_identifier_token, .block = idx } },
+                        .label,
                     );
                 }
             },
@@ -985,7 +997,7 @@ noinline fn walkWhileNode(
             try then_scope.pushDeclaration(
                 label_name.?,
                 .{ .label = .{ .identifier = label, .block = while_node.ast.then_expr } },
-                .other,
+                .label,
             );
         }
         if (payload_declaration) |decl| {
@@ -1006,7 +1018,7 @@ noinline fn walkWhileNode(
                 try else_scope.pushDeclaration(
                     label_name.?,
                     .{ .label = .{ .identifier = label, .block = while_node.ast.then_expr } },
-                    .other,
+                    .label,
                 );
             }
 
@@ -1067,7 +1079,7 @@ noinline fn walkForNode(
         try then_scope.pushDeclaration(
             label_name.?,
             .{ .label = .{ .identifier = label_token, .block = for_node.ast.then_expr } },
-            .other,
+            .label,
         );
     }
 
@@ -1079,7 +1091,7 @@ noinline fn walkForNode(
             try else_scope.pushDeclaration(
                 label_name.?,
                 .{ .label = .{ .identifier = label_token, .block = for_node.ast.else_expr } },
-                .other,
+                .label,
             );
             try else_scope.finalize();
         } else {

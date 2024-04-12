@@ -168,6 +168,30 @@ test "multiline builder pattern" {
     );
 }
 
+test "block and decl with same name" {
+    try testDefinition(
+        \\const x = <def><decl>x</decl></def>: {
+        \\    const x: u8 = 1;
+        \\    break :<>x x;
+        \\};
+        \\_ = x;
+    );
+    try testDefinition(
+        \\const x = x: {
+        \\    const <def><decl>x</decl></def>: u8 = 1;
+        \\    break :x <>x;
+        \\};
+        \\_ = x;
+    );
+    try testDefinition(
+        \\const <def><decl>x</decl></def> = x: {
+        \\    const x: u8 = 1;
+        \\    break :x x;
+        \\};
+        \\_ = <>x;
+    );
+}
+
 /// - use `<>` to indicate the cursor position
 /// - use `<decl>content</decl>` to set the expected range of the declaration
 /// - use `<def>content</def>` to set the expected range of the definition
